@@ -30,17 +30,20 @@ public enum Protocol
 {
     APCO25("APCO-25", "APCO25PHASE1", 9600),
     APCO25_PHASE2("APCO-25 P2", "APCO25PHASE2", 12000),
+    ARS("ARS", "ARS", 0),
     CELLOCATOR("CELLOCATOR", "CELLOCATOR", 0),
+    DMR("DMR", "DMR", 9600),
     FLEETSYNC("Fleetsync", "FLEETSYNC", 1200),
     IPV4("IPV4", "IPV4", 0),
     LOJACK("LoJack", "LOJACK", 1200),
+    LRRP("LRRP", "LRRP", 0),
     LTR("LTR", "LTR", 300),
     LTR_NET("LTR-Net", "LTRNET", 300),
     MDC1200("MDC-1200", "MDC1200", 1200),
     MPT1327("MPT-1327", "MPT1327", 1200),
     PASSPORT("Passport", "PASSPORT", 300),
     TAIT1200("Tait 1200", "TAIT1200", 1200),
-    DMR("DMR", "DMR", 9600),
+    UDP("UDP", "UDP", 0),
     UNKNOWN("Unknown", "UNKNOWN", 0);
 
     private String mLabel;

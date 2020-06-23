@@ -19,25 +19,25 @@
 package io.github.dsheirer.module.decode.dmr.message.type;
 
 /**
- * The Data Unit ID (DUID) is part of the Network ID (NID) field and indicates the type of message.
+ * DMR Data Type enumeration
  */
 public enum DataType
 {
-    PI_HEADER(0, 288,  "ENCRYPTION HEADER"), //TODO: not implemented
+    PI_HEADER(0, 288,  "ENCRYPTION HEADER"),
     VOICE_HEADER(1, 288, "VOICE HEADER"),
     TLC(2, 288,  "TERMINATOR"),
     CSBK(3, 288, "CSBK"),
-    MBC_HEADER(4, 288, "MBC HEADER"), //TODO: not implemented
-    MBC(5, 276,  "MBC"), //TODO: not implemented
-    DATA_HEADER(6, 288,  "DATA HEADER"), //TODO: not implemented
-    RATE_1_OF_2_DATA(7, 276, "RATE 1/2 PACKET"), //TODO: not implemented
-    RATE_3_OF_4_DATA(8, 276,  "RATE 3/4 PACKET"), //TODO: not implemented
+    MBC_HEADER(4, 288, "MBC HEADER"),
+    MBC(5, 276,  "MBC"),
+    DATA_HEADER(6, 288,  "DATA HEADER"),
+    RATE_1_OF_2_DATA(7, 276, "RATE 1/2 PACKET"),
+    RATE_3_OF_4_DATA(8, 276,  "RATE 3/4 PACKET"),
     SLOT_IDLE(9, 276, "IDLE"),
-    RATE_1_DATA(10, 276,  "RATE 1/1 PACKET"), //TODO: not implemented
-    CSBK_ENC_HEADER(11, 276,  "CSBK ENCRYPTED HEADER"), //not implemented
-    MBC_ENC_HEADER(12, 276,  "MBC ENCRYPTED HEADER"), //not implemented
-    DATA_ENC_HEADER(13, 276, "DATA ENCRYPTED HEADER"), //not implemented
-    CHANNEL_CONTROL_ENC_HEADER(14, 276,  "CONTROL CHANNEL ENCRYPTED HEADER"), //not implemented
+    RATE_1_DATA(10, 276,  "RATE 1/1 PACKET"),
+    UNIFIED_SINGLE_BLOCK_DATA(11, 276,  "UNIFIED SINGLE BLOCK DATA"),
+    MBC_ENC_HEADER(12, 276,  "MBC ENCRYPTED HEADER"),
+    DATA_ENC_HEADER(13, 276, "DATA ENCRYPTED HEADER"),
+    CHANNEL_CONTROL_ENC_HEADER(14, 276,  "CONTROL CHANNEL ENCRYPTED HEADER"),
     RESERVED_15(15, -1,  "RESERVED"),
     UNKNOWN(-1, -1,  "UNKNOWN");
 
@@ -106,7 +106,7 @@ public enum DataType
             case 10:
                 return RATE_1_DATA;
             case 11:
-                return CSBK_ENC_HEADER;
+                return UNIFIED_SINGLE_BLOCK_DATA;
             case 12:
                 return MBC_ENC_HEADER;
             case 13:

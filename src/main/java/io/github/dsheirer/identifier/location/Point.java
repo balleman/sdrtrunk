@@ -52,8 +52,8 @@ public class Point
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("LAT:").append(mLatitude);
-        sb.append(" LON:").append(mLongitude);
+        sb.append(Math.abs(mLatitude)).append(mLatitude >= 0 ? "N " : "S ");
+        sb.append(Math.abs(mLongitude)).append(mLongitude >= 0 ? "E" : "W");
         return sb.toString();
     }
 }

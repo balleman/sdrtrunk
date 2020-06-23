@@ -22,16 +22,30 @@
 package io.github.dsheirer.module.decode.dmr;
 
 import io.github.dsheirer.message.IMessage;
+import io.github.dsheirer.module.decode.dmr.channel.ITimeslotFrequencyReceiver;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.DMRBurst;
+import io.github.dsheirer.module.decode.dmr.message.data.block.DataBlock;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.motorola.CapacityPlusSystemStatus;
+import io.github.dsheirer.module.decode.dmr.message.data.csbk.standard.Preamble;
+import io.github.dsheirer.module.decode.dmr.message.data.header.PacketSequenceHeader;
+import io.github.dsheirer.module.decode.dmr.message.data.header.ProprietaryDataHeader;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.full.FLCAssembler;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.full.FullLCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.SLCAssembler;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ShortLCMessage;
+import io.github.dsheirer.module.decode.dmr.message.data.packet.PacketSequenceAssembler;
+import io.github.dsheirer.module.decode.dmr.message.type.LCSS;
 import io.github.dsheirer.module.decode.dmr.message.voice.VoiceEMBMessage;
+import io.github.dsheirer.module.decode.p25.phase1.message.pdu.response.ResponseHeader;
 import io.github.dsheirer.sample.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Processes DMR messages and performs re-assembly of link control fragments
@@ -43,13 +57,21 @@ public class DMRMessageProcessor implements Listener<IMessage>
     private SLCAssembler mSLCAssembler = new SLCAssembler();
     private FLCAssembler mFLCAssemblerTimeslot0 = new FLCAssembler(0);
     private FLCAssembler mFLCAssemblerTimeslot1 = new FLCAssembler(1);
+    private PacketSequenceAssembler mPacketSequenceAssembler;
     private Listener<IMessage> mMessageListener;
+    private Map<Integer,TimeslotFrequency> mTimeslotFrequencyMap = new TreeMap<>();
 
     /**
      * Constructs an instance
      */
-    public DMRMessageProcessor()
+    public DMRMessageProcessor(DecodeConfigDMR config)
     {
+        for(TimeslotFrequency timeslotFrequency: config.getTimeslotMap())
+        {
+            mTimeslotFrequencyMap.put(timeslotFrequency.getNumber(), timeslotFrequency);
+        }
+
+        mPacketSequenceAssembler = new PacketSequenceAssembler();
     }
 
     /**
@@ -59,6 +81,28 @@ public class DMRMessageProcessor implements Listener<IMessage>
     public void receive(IMessage message)
     {
         dispatch(message);
+
+        //Enrich messages that carry DMR Logical Slot Number channels with LCN to frequency mappings
+        if(message instanceof ITimeslotFrequencyReceiver)
+        {
+            ITimeslotFrequencyReceiver receiver = (ITimeslotFrequencyReceiver)message;
+            int[] lsns = receiver.getLogicalTimeslotNumbers();
+
+            List<TimeslotFrequency> timeslotFrequencies = new ArrayList<>();
+
+            for(int lsn: lsns)
+            {
+                if(mTimeslotFrequencyMap.containsKey(lsn))
+                {
+                    timeslotFrequencies.add(mTimeslotFrequencyMap.get(lsn));
+                }
+            }
+
+            if(!timeslotFrequencies.isEmpty())
+            {
+                receiver.apply(timeslotFrequencies);
+            }
+        }
 
         //Extract the Full Link Control message fragment from the Voice with embedded signalling message
         if(message instanceof VoiceEMBMessage)
@@ -77,6 +121,13 @@ public class DMRMessageProcessor implements Listener<IMessage>
                     voice.getFLCFragment(), message.getTimestamp());
                 dispatch(flco);
             }
+
+            if(voice.hasCACH())
+            {
+                CACH cach = voice.getCACH();
+                ShortLCMessage slco = mSLCAssembler.process(cach.getLCSS(), cach.getPayload(), message.getTimestamp());
+                dispatch(slco);
+            }
         }
         //Extract the Short Link Control message fragment from the DMR burst message when it has one
         else if(message instanceof DMRBurst)
@@ -89,9 +140,40 @@ public class DMRMessageProcessor implements Listener<IMessage>
                 ShortLCMessage slco = mSLCAssembler.process(cach.getLCSS(), cach.getPayload(), message.getTimestamp());
                 dispatch(slco);
             }
+
+            //Packet Sequence Message Assembly ...
+            if(message instanceof Preamble)
+            {
+                mPacketSequenceAssembler.process((Preamble)message);
+            }
+            else if(message instanceof PacketSequenceHeader)
+            {
+                mPacketSequenceAssembler.process((PacketSequenceHeader)message);
+            }
+            else if(message instanceof ProprietaryDataHeader)
+            {
+                mPacketSequenceAssembler.process(((ProprietaryDataHeader)message));
+            }
+            else if(message instanceof DataBlock)
+            {
+                mPacketSequenceAssembler.process((DataBlock)message);
+            }
+            else if(message instanceof ResponseHeader)
+            {
+                //TODO: handle multi-block response packets
+            }
         }
 
-        //TODO: perform packet sequence re-assembly here
+        if(message instanceof CapacityPlusSystemStatus)
+        {
+            LCSS lcss = ((CapacityPlusSystemStatus)message).getFragmentIndicator();
+
+            //TODO: process Cap+ system status message that is fragmented ...
+            if(lcss != LCSS.SINGLE_FRAGMENT)
+            {
+//                mLog.warn("*** MULTI-FRAGMENT DMR CAP+ SYSTEM STATUS MESSAGE DETECTED - PLEASE MAKE A .bits RECORDING AND NOTIFY DEVELOPER");
+            }
+        }
     }
 
     /**
@@ -119,6 +201,7 @@ public class DMRMessageProcessor implements Listener<IMessage>
     public void setMessageListener(Listener<IMessage> listener)
     {
         mMessageListener = listener;
+        mPacketSequenceAssembler.setMessageListener(listener);
     }
 
     /**
@@ -127,5 +210,6 @@ public class DMRMessageProcessor implements Listener<IMessage>
     public void removeMessageListener()
     {
         mMessageListener = null;
+        mPacketSequenceAssembler.setMessageListener(null);
     }
 }

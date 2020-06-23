@@ -28,8 +28,10 @@ import io.github.dsheirer.module.decode.dmr.message.data.lc.full.GroupVoiceChann
 import io.github.dsheirer.module.decode.dmr.message.data.lc.full.UnitToUnitVoiceChannelUser;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.full.UnknownFullLCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ActivityUpdateMessage;
+import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.CapacityPlusRestChannel;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ConnectPlusControlChannel;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ConnectPlusTrafficChannel;
+import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ControlChannelSystemParameters;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.NullMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.ShortLCMessage;
 import io.github.dsheirer.module.decode.dmr.message.data.lc.shorty.UnknownShortLCMessage;
@@ -46,6 +48,11 @@ public class LCMessageFactory
      */
     public static FullLCMessage createFull(CorrectedBinaryMessage message, long timestamp, int timeslot)
     {
+        if(message == null)
+        {
+            throw new IllegalArgumentException("Message cannot be null");
+        }
+
         int errorCount = ReedSolomon_12_9.checkReedSolomon(message, 0, 72, 0x96);
         message.setCorrectedBitCount(message.getCorrectedBitCount() + errorCount);
         LCOpcode opcode = FullLCMessage.getOpcode(message);
@@ -91,6 +98,9 @@ public class LCMessageFactory
             case SHORT_STANDARD_ACTIVITY_UPDATE:;
                 slc = new ActivityUpdateMessage(message, timestamp, timeslot);
                 break;
+            case SHORT_CAPACITY_PLUS_REST_CHANNEL_NOTIFICATION:
+                slc = new CapacityPlusRestChannel(message, timestamp, timeslot);
+                break;
             case SHORT_CONNECT_PLUS_CONTROL_CHANNEL:
                 slc = new ConnectPlusControlChannel(message, timestamp, timeslot);
                 break;
@@ -98,6 +108,8 @@ public class LCMessageFactory
                 slc = new ConnectPlusTrafficChannel(message, timestamp, timeslot);
                 break;
             case SHORT_STANDARD_CONTROL_CHANNEL_SYSTEM_PARAMETERS:
+                slc = new ControlChannelSystemParameters(message, timestamp, timeslot);
+                break;
             case SHORT_STANDARD_TRAFFIC_CHANNEL_SYSTEM_PARAMETERS:
             case SHORT_STANDARD_UNKNOWN:
             default:

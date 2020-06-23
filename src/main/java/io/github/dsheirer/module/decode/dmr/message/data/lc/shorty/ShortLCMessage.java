@@ -30,10 +30,15 @@ import io.github.dsheirer.module.decode.dmr.message.type.Vendor;
  */
 public abstract class ShortLCMessage extends LCMessage implements IMessage
 {
+    protected static final int VENDOR_FLAG = 0;
     protected static final int[] OPCODE = new int[]{0, 1, 2, 3};
+
+    //Note: it is possible that vendor (ie feature ID) is present when the opcode is >= 8, meaning bit 0 is the vendor flag.
+    protected static final int[] VENDOR = new int[]{4, 5, 6, 7, 8, 9, 10, 11};
 
     /**
      * Constructs an instance
+     *
      * @param message containing the short link control message bits
      */
     public ShortLCMessage(CorrectedBinaryMessage message, long timestamp, int timeslot)
@@ -72,7 +77,8 @@ public abstract class ShortLCMessage extends LCMessage implements IMessage
      */
     public static LCOpcode getOpcode(BinaryMessage binaryMessage)
     {
-        return LCOpcode.fromValue(false, binaryMessage.getInt(OPCODE), getVendor(binaryMessage));
+        Vendor vendor = getVendor(binaryMessage);
+        return LCOpcode.fromValue(false, binaryMessage.getInt(OPCODE), vendor);
     }
 
     /**
@@ -80,8 +86,19 @@ public abstract class ShortLCMessage extends LCMessage implements IMessage
      */
     public static Vendor getVendor(BinaryMessage binaryMessage)
     {
-        //TODO: determine when we have a non-standard vendor
-        return Vendor.STANDARD;
+        Vendor vendor = null;
+
+        if(binaryMessage.get(VENDOR_FLAG))
+        {
+            vendor = Vendor.fromValue(binaryMessage.getInt(VENDOR));
+        }
+
+        if(vendor == null || vendor == Vendor.UNKNOWN)
+        {
+            vendor = Vendor.STANDARD;
+        }
+
+        return vendor;
     }
 }
 

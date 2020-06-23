@@ -27,6 +27,9 @@ package io.github.dsheirer.identifier;
 public enum Form
 {
     ALIAS_LIST,
+    ARS_DEVICE,
+    ARS_USER,
+    ARS_PASSWORD,
     CALL_PROGRESS_TONE,
     CHANNEL,
     CHANNEL_DESCRIPTOR,
@@ -56,6 +59,7 @@ public enum Form
     TALKGROUP,
     TELEPHONE_NUMBER,
     TONE,
+    UDP_PORT,
     UNIT_IDENTIFIER,
     UNIT_STATUS,
     USER_STATUS,

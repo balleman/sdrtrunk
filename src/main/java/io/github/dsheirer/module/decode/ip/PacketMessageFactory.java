@@ -1,7 +1,7 @@
 /*
  * ******************************************************************************
  * sdrtrunk
- * Copyright (C) 2014-2019 Dennis Sheirer
+ * Copyright (C) 2014-2020 Dennis Sheirer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,15 @@
 
 package io.github.dsheirer.module.decode.ip;
 
-import io.github.dsheirer.bits.BinaryMessage;
+import io.github.dsheirer.bits.CorrectedBinaryMessage;
 import io.github.dsheirer.module.decode.ip.ars.ARSPacket;
 import io.github.dsheirer.module.decode.ip.cellocator.MCGPHeader;
 import io.github.dsheirer.module.decode.ip.cellocator.MCGPMessageFactory;
 import io.github.dsheirer.module.decode.ip.ipv4.IPV4Header;
 import io.github.dsheirer.module.decode.ip.ipv4.IPV4Packet;
+import io.github.dsheirer.module.decode.ip.lrrp.LRRPPacket;
 import io.github.dsheirer.module.decode.ip.udp.UDPPacket;
+import io.github.dsheirer.module.decode.ip.udp.UDPPort;
 import io.github.dsheirer.module.decode.p25.phase1.message.pdu.packet.sndcp.SNDCPPacketHeader;
 import io.github.dsheirer.module.decode.p25.reference.IPHeaderCompression;
 
@@ -42,7 +44,7 @@ public class PacketMessageFactory
      * @param offset to the IP packet within the message
      * @return constructed packet message parser
      */
-    public static IPacket create(SNDCPPacketHeader sndcpPacketHeader, BinaryMessage message, int offset)
+    public static IPacket create(SNDCPPacketHeader sndcpPacketHeader, CorrectedBinaryMessage message, int offset)
     {
         if(sndcpPacketHeader.getIPHeaderCompression() == IPHeaderCompression.NONE)
         {
@@ -70,7 +72,7 @@ public class PacketMessageFactory
      * @param offset to the start of the IP packet payload
      * @return constructed packet message parser
      */
-    public static IPacket create(IPProtocol protocol, BinaryMessage binaryMessage, int offset)
+    public static IPacket create(IPProtocol protocol, CorrectedBinaryMessage binaryMessage, int offset)
     {
         switch(protocol)
         {
@@ -88,11 +90,11 @@ public class PacketMessageFactory
      * @param destinationPort for the packet (to identify the protocol/format)
      * @param binaryMessage containing the IP/UDP payload
      * @param offset in the message to the start of the payload
-     * @return constructed packet messge parser
+     * @return constructed packet message parser
      */
-    public static IPacket createUDPPayload(int sourcePort, int destinationPort, BinaryMessage binaryMessage, int offset)
+    public static IPacket createUDPPayload(UDPPort sourcePort, UDPPort destinationPort, CorrectedBinaryMessage binaryMessage, int offset)
     {
-        switch(destinationPort)
+        switch(destinationPort.getValue())
         {
             case 231:
                 //Cellocator
@@ -102,7 +104,7 @@ public class PacketMessageFactory
                 }
                 break;
             case 4001: //Location Service
-                break;
+                return new LRRPPacket(binaryMessage, offset);
             case 4004: //XCMP Service
                 break;
             case 4005: //Automatic Registration Service
@@ -111,9 +113,15 @@ public class PacketMessageFactory
                 break;
             case 4008: //Telemetry Service
                 break;
+            case 4009: //Over The Air Programming (OTAP)
+                break;
+            case 4012: //Battery Management
+                break;
+            case 4013: //Job Ticket Server
+                break;
         }
 
-        switch(sourcePort)
+        switch(sourcePort.getValue())
         {
             case 231:
                 //Cellocator

@@ -21,6 +21,7 @@ package io.github.dsheirer.module.decode.dmr.message.data.csbk;
 
 import io.github.dsheirer.bits.BinaryMessage;
 import io.github.dsheirer.bits.CorrectedBinaryMessage;
+import io.github.dsheirer.edac.CRCDMR;
 import io.github.dsheirer.module.decode.dmr.DMRSyncPattern;
 import io.github.dsheirer.module.decode.dmr.message.CACH;
 import io.github.dsheirer.module.decode.dmr.message.data.DataMessage;
@@ -53,8 +54,10 @@ public abstract class CSBKMessage extends DataMessage
     {
         super(syncPattern, message, cach, slotType, timestamp, timeslot);
 
+        int correctedBitCount = CRCDMR.correctCCITT80(message, 0, 80, 0xA5A5);
+
         //Set message valid flag according to the corrected bit count for the CRC protected message
-        setValid(getMessage().getCorrectedBitCount() != 2);
+        setValid(correctedBitCount < 2);
     }
 
     public boolean isLastBlock()
@@ -118,68 +121,4 @@ public abstract class CSBKMessage extends DataMessage
     {
         return getMessage().getInt(VENDOR);
     }
-
-//    @Override
-//    public String toString()
-//    {
-//        if(!isValid())
-//        {
-//            return "[CSBK] Invalid CSBK";
-//        }
-//        StringBuilder sb = new StringBuilder();
-//
-//        featId = dataMessage.getInt(FEATURE_ID);
-//        int csbkoId = dataMessage.getInt(OPCODE);
-//        sb.append("[CSBK] FID: " + fids[fid_mapping[featId]] + " >>> ");
-//        if(featId == 6 && csbkoId == 1)
-//        {
-//            int[] nbArray = new int[5];
-//            nbArray[0] = (dataMessage.getByte(18) >> 2);
-//            nbArray[1] = (dataMessage.getByte(26) >> 2);
-//            nbArray[2] = (dataMessage.getByte(34) >> 2);
-//            nbArray[3] = (dataMessage.getByte(42) >> 2);
-//            nbArray[4] = (dataMessage.getByte(50) >> 2);
-//            sb.append(String.format("Neighbors: %d %d %d %d %d ",
-//                nbArray[0], nbArray[1], nbArray[2], nbArray[3], nbArray[4]));
-//        }
-//        else if(featId == 6 && csbkoId == 3)
-//        {
-//            int lcn = dataMessage.getInt(64, 68 - 1);
-//            sb.append("Channel Grant TS = " + (dataMessage.get(68) ? "1" : "2") + ", LCN = " + lcn +
-//                ", TG = " + dataMessage.getByte(40) +
-//                ", ID = " + dataMessage.getByte(16));
-//            // lcn_temp_needtoberemoved = lcn;
-//        }
-//        else if(featId == 16 && csbkoId == 62)
-//        {
-//            int lcn = dataMessage.getInt(20, 24 - 1);
-//            byte[] groupArr = new byte[6];
-//            groupArr[0] = dataMessage.getByte(32);
-//            groupArr[1] = dataMessage.getByte(40);
-//            groupArr[2] = dataMessage.getByte(48);
-//            groupArr[3] = dataMessage.getByte(56);
-//            groupArr[4] = dataMessage.getByte(64);
-//            groupArr[5] = dataMessage.getByte(72);
-//            if(dataMessage.getInt(24, 30 - 1) == 0)
-//            {
-//                sb.append("RestCh = " + lcn + " ");
-//            }
-//            else
-//            {
-//                for(int i = 0; i < 6; i++)
-//                {
-//                    if(dataMessage.get(24 + i))
-//                    {
-//                        sb.append(", LCN " + (i + 1) + " -> TG " + groupArr[i] + "; ");
-//                    }
-//                }
-//            }
-//        }
-//        else
-//        {
-//            sb.append("CSBKO: " + csbkoId + ", Not decoded. ");
-//        }
-//        return sb.toString();
-//    }
-
 }
