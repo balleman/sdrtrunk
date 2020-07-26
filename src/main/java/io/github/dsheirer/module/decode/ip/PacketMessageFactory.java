@@ -96,8 +96,7 @@ public class PacketMessageFactory
     {
         switch(destinationPort.getValue())
         {
-            case 231:
-                //Cellocator
+            case 231: //Cellocator
                 if(MCGPHeader.isCellocatorMessage(binaryMessage, offset))
                 {
                     return MCGPMessageFactory.create(binaryMessage, offset);

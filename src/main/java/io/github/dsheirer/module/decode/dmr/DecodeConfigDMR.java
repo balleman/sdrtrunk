@@ -39,10 +39,6 @@ public class DecodeConfigDMR extends DecodeConfiguration
 
     public DecodeConfigDMR()
     {
-        TimeslotFrequency timeslotFrequency = new TimeslotFrequency();
-        timeslotFrequency.setNumber(1);
-        timeslotFrequency.setDownlinkFrequency(123456000l);
-        mTimeslotMap.add(timeslotFrequency);
     }
 
     /**
