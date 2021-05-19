@@ -62,7 +62,7 @@ public enum LCOpcode
     SHORT_HYTERA_XPT_CHANNEL(Vendor.HYTERA_68, false, 8, "HYTERA XPT CHANNEL"),
 
     SHORT_CONNECT_PLUS_TRAFFIC_CHANNEL(Vendor.STANDARD, false, 9, "TRAFFIC CHANNEL INFO"),
-    SHORT_CONNECT_PLUS_CONTROL_CHANNEL(Vendor.STANDARD, false, 10, "CONTROL CHANNEL INFO"),
+    SHORT_CONNECT_PLUS_CONTROL_CHANNEL(Vendor.HYTERA_8, false, 10, "CONTROL CHANNEL INFO"),
 
 
     SHORT_STANDARD_UNKNOWN(Vendor.STANDARD,false,-1, "SHORT UNKNOWN");
@@ -171,6 +171,7 @@ public enum LCOpcode
      */
     public static LCOpcode fromValue(boolean full, int value, Vendor vendor)
     {
+        //System.err.println("LCOpcode.fromValue: full:" + full + ", value:" + value + ", vendor: " + vendor);
         if(full)
         {
             LCOpcode fullOpcode = FULL_STANDARD_UNKNOWN;
